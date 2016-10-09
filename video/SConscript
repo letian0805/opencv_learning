@@ -1,0 +1,3 @@
+Import("env")
+
+env.Program(target="video_1", source="video_1.c")
