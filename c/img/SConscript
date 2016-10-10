@@ -1,0 +1,3 @@
+Import("env")
+
+env.Program(target="img1", source="img1.c")
