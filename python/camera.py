@@ -23,6 +23,8 @@ else:
 # initialize the first frame in the video stream
 firstFrame = None
 lastCnts = None
+frame_flag = 0
+cnts_flag = 0
 # Define the codec
 fourcc = cv.CV_FOURCC('X', 'V', 'I', 'D')
 framecount = 0
@@ -36,8 +38,62 @@ while tc:
   #cv2.imshow("vw",frame)
   cv2.waitKey(10)
   tc -= 1
-totalc = 60
+totalc = 3
 tc = totalc
+frames = []
+
+def removeSmallRect(cnts):
+  ret = []
+  for c in cnts:
+    contour = cv2.contourArea(c)
+    (x, y, w, h) = cv2.boundingRect(c)
+    if contour < args["min_area"] or w < args["min_width"] or h < args["min_width"]:
+      continue
+    ret.extend([c])
+  return ret
+
+class Rect:
+  def __init__(self, x, y, w, h):
+    self.x = x
+    self.y = y
+    self.w = w
+    self.h = h
+
+def rectCanMerge(r1, r2):
+  delta_x = abs((r1.x + r1.w / 2) - (r2.x + r2.w / 2))
+  delta_y = abs((r1.y + r1.h / 2) - (r2.y + r2.h / 2))
+  return delta_y <= (r1.h + r2.h)/2 and delta_x <= (r1.w + r2.w)/2
+
+def mergeRect(r1, r2):
+    x = min(r1.x, r2.x)
+    y = min(r1.y, r2.y)
+    w = max(r1.x + r1.w, r2.x + r2.w) - x
+    h = max(r1.y + r1.h, r2.y + r2.h) - y
+    return Rect(x, y, w, h)
+
+def cntsToRects(cnts):
+  ret = []
+  for c in cnts:
+    (x, y, w, h) = cv2.boundingRect(c)
+    r = Rect(x, y, w, h)
+    ret.extend([r])
+  return ret
+
+def mergeAllRect(rects):
+  ret = []
+  while(len(rects) > 1):
+    r = rects.pop()
+    can_merge = False
+    for i in xrange(0, len(rects) - 1):
+      ri = rects[i]
+      can_merge = rectCanMerge(ri, r)
+      if can_merge:
+        rects[i] = mergeRect(r, ri)
+        break
+    if not can_merge:
+      ret.extend([r])
+  return ret
+
 ##out.release()
 # loop over the frames of the video
 while True:
@@ -48,18 +104,15 @@ while True:
   # if the frame could not be grabbed, then we have reached the end
   # of the video
   if not grabbed:
-    time.sleep(0.25)
+    #time.sleep(0.01)
     continue
   # resize the frame, convert it to grayscale, and blur it
   gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
   gray = cv2.GaussianBlur(gray, (21, 21), 0)
   # update firstFrame for every while
-  if tc%totalc == 0:
+  if frame_flag == 0:
     firstFrame = gray
-    tc = (tc+1) % totalc
-    continue
-  else:
-    tc = (tc+1) % totalc
+    frame_flag = 1
   #print tc
   # compute the absolute difference between the current frame and
   # first frame
@@ -69,23 +122,22 @@ while True:
   # on thresholded image
   thresh = cv2.dilate(thresh, None, iterations=2)
   (cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-  if lastCnts == None:
-      lastCnts = cnts
-  if cnts == None:
-      cnts = lastCnts
+  cnts = removeSmallRect(cnts)
+  rects = cntsToRects(cnts)
+  ret = mergeAllRect(rects)
+  rects = ret
+  if cnts_flag == 0:
+    lastCnts = rects
+    cnts_flag = 1
+  if len(rects) == 0:
+    rects = lastCnts
   # loop over the contours
-  for c in cnts:
-  # if the contour is too small, ignore it
-    contour = cv2.contourArea(c)
-    (x, y, w, h) = cv2.boundingRect(c)
-    if contour < args["min_area"] or w < args["min_width"] or h < args["min_width"]:
-     # print "%d %d %d %d %d"%(contour, x, y, w, h)
-      continue
+  for r in rects:
     # compute the bounding box for the contour, draw it on the frame,
     # and update the text
-    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    cv2.rectangle(frame, (r.x, r.y), (r.x + r.w, r.y + r.h), (0, 255, 0), 2)
     text = "Occupied"
-  lastCnts = cnts
+  lastCnts = rects
   # draw the text and timestamp on the frame
   cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
   cv2.putText(frame, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
@@ -109,7 +161,10 @@ while True:
   elif framecount > 20 or framecount<2:
     ##out.release()
     framecount = 0
-  key = cv2.waitKey(1) & 0xFF
+  frames.insert(0, gray)
+  if len(frames) > totalc:
+    firstFrame = frames.pop()
+  key = cv2.waitKey(10) & 0xFF
   # if the `ESC` key is pressed, break from the lop
   if key == 27:
     break
