@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     cvNamedWindow(out_window, CV_WINDOW_AUTOSIZE);
     cvShowImage(in_window, img);
     IplImage *out = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 3);
-    cvSmooth(img, out, CV_GAUSSIAN, 3, 3, 0, 0);
+    cvSmooth(img, out, CV_GAUSSIAN, 3, 3, 0, 1.0);
     cvShowImage(out_window, out);
     cvWaitKey(0);
     cvReleaseImage(&img);

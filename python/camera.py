@@ -11,6 +11,7 @@ import numpy as np
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", help="path to the video file")
 ap.add_argument("-a", "--min-area", type=int, default=300, help="minimum area size")
+ap.add_argument("-w", "--min-width", type=int, default=100, help="minimum area width")
 args = vars(ap.parse_args())
 # if the video argument is None, then we are reading from webcam
 if args.get("video", None) is None:
@@ -21,6 +22,7 @@ else:
   camera = cv2.VideoCapture(args["video"])
 # initialize the first frame in the video stream
 firstFrame = None
+lastCnts = None
 # Define the codec
 fourcc = cv.CV_FOURCC('X', 'V', 'I', 'D')
 framecount = 0
@@ -34,7 +36,7 @@ while tc:
   #cv2.imshow("vw",frame)
   cv2.waitKey(10)
   tc -= 1
-totalc = 2000
+totalc = 60
 tc = totalc
 ##out.release()
 # loop over the frames of the video
@@ -67,16 +69,23 @@ while True:
   # on thresholded image
   thresh = cv2.dilate(thresh, None, iterations=2)
   (cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+  if lastCnts == None:
+      lastCnts = cnts
+  if cnts == None:
+      cnts = lastCnts
   # loop over the contours
   for c in cnts:
   # if the contour is too small, ignore it
-    if cv2.contourArea(c) < args["min_area"]:
+    contour = cv2.contourArea(c)
+    (x, y, w, h) = cv2.boundingRect(c)
+    if contour < args["min_area"] or w < args["min_width"] or h < args["min_width"]:
+     # print "%d %d %d %d %d"%(contour, x, y, w, h)
       continue
     # compute the bounding box for the contour, draw it on the frame,
     # and update the text
-    (x, y, w, h) = cv2.boundingRect(c)
     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
     text = "Occupied"
+  lastCnts = cnts
   # draw the text and timestamp on the frame
   cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
   cv2.putText(frame, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
