@@ -11,7 +11,7 @@ import numpy as np
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", help="path to the video file")
 ap.add_argument("-a", "--min-area", type=int, default=300, help="minimum area size")
-ap.add_argument("-w", "--min-width", type=int, default=100, help="minimum area width")
+ap.add_argument("-w", "--min-width", type=int, default=60, help="minimum area width")
 args = vars(ap.parse_args())
 # if the video argument is None, then we are reading from webcam
 if args.get("video", None) is None:
@@ -38,7 +38,7 @@ while tc:
   #cv2.imshow("vw",frame)
   cv2.waitKey(10)
   tc -= 1
-totalc = 3
+totalc = 2
 tc = totalc
 frames = []
 
@@ -92,6 +92,13 @@ def mergeAllRect(rects):
         break
     if not can_merge:
       ret.extend([r])
+  for i in xrange(0, len(ret)):
+      delta_x = ret[i].w / 4
+      delta_y = ret[i].h / 4
+      ret[i].x += delta_x
+      ret[i].y += delta_y
+      ret[i].w -= delta_x
+      ret[i].h -= delta_y
   return ret
 
 ##out.release()
@@ -108,16 +115,17 @@ while True:
     continue
   # resize the frame, convert it to grayscale, and blur it
   gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-  gray = cv2.GaussianBlur(gray, (21, 21), 0)
   # update firstFrame for every while
   if frame_flag == 0:
     firstFrame = gray
     frame_flag = 1
+    continue
   #print tc
   # compute the absolute difference between the current frame and
   # first frame
   frameDelta = cv2.absdiff(firstFrame, gray)
-  thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
+  frameDelta = cv2.GaussianBlur(frameDelta, (5, 5), 0)
+  thresh = cv2.threshold(frameDelta, 10, 255, cv2.THRESH_BINARY)[1]
   # dilate the thresholded image to fill in holes, then find contours
   # on thresholded image
   thresh = cv2.dilate(thresh, None, iterations=2)
@@ -145,6 +153,7 @@ while True:
   cv2.imshow("Security Feed", frame)
   cv2.imshow("Thresh", thresh)
   cv2.imshow("Frame Delta", frameDelta)
+  cv2.imshow("gray", gray)
   # save the detection result
   if text == "Occupied":
     if framecount == 0:
