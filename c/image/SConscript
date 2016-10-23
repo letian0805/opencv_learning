@@ -1,5 +1,5 @@
 Import("env")
 
-env.Program(target="img1", source="img1.c")
-env["LIBS"] += ["opencv_imgproc"]
+env.Program(target="show", source="show.c")
 env.Program(target="smooth", source="smooth.c")
+env.Program(target="downscale", source="downscale.c")

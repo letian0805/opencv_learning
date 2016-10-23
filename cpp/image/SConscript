@@ -1,3 +1,4 @@
 Import("env")
 
-env.Program(target="img1", source="img1.cpp")
+env.Program(target="show", source="show.cpp")
+env.Program(target="downscale", source="downscale.cpp")

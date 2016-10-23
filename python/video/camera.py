@@ -28,7 +28,7 @@ cnts_flag = 0
 # Define the codec
 fourcc = cv.CV_FOURCC('X', 'V', 'I', 'D')
 framecount = 0
-frame = np.zeros((640,480))
+frame = np.zeros((1280,720))
 ##out = cv2.VideoWriter('calm_down_video_'+datetime.datetime.now().strftime("%A_%d_%B_%Y_%I_%M_%S%p")+'.avi',fourcc, 5.0, np.shape(frame))
 # to begin with, the light is not stable, calm it down
 tc = 40

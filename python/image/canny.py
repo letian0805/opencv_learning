@@ -21,7 +21,7 @@ img_laplace = cv2.Laplacian(img_gray, cv2.CV_64F, ksize=3)
 
 # Canny 算子  
 img_canny = cv2.Canny(img_gray, 100, 150)
-img_gray1 = cv2.GaussianBlur(img_gray, (9, 9), 0)
+img_gray1 = cv2.GaussianBlur(img_gray, (11, 11), 0)
 img_canny1 = cv2.Canny(img_gray1, 100, 150)
 
 plt.subplot(231),  plt.imshow(img_gray, "gray"),  plt.title("Original")  

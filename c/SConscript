@@ -1,6 +1,6 @@
 env = Environment()
 env["CPPPATH"] = ["/usr/include/opencv"]
-env["LIBS"] = ["opencv_core", "opencv_highgui", "m"]
+env["LIBS"] = ["opencv_core", "opencv_highgui", "opencv_imgproc", "m"]
 Export("env")
 
 SConscript("image/SConscript")
