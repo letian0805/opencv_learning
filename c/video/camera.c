@@ -1,4 +1,5 @@
-#include "highgui.h"
+#include <cv.h>
+#include <highgui.h>
 #include <string.h>
 
 CvCapture *g_capture = NULL;

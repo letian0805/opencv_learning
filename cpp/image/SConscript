@@ -2,3 +2,5 @@ Import("env")
 
 env.Program(target="show", source="show.cpp")
 env.Program(target="downscale", source="downscale.cpp")
+env.Program(target="smooth", source="smooth.cpp")
+env.Program(target="canny", source="canny.cpp")

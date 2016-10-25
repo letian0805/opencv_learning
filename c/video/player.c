@@ -1,4 +1,5 @@
-#include "highgui.h"
+#include <cv.h>
+#include <highgui.h>
 
 int g_slider_position = 0;
 CvCapture *g_capture = NULL;

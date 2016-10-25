@@ -1,6 +1,5 @@
-#include <cv.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <cv.h>
+#include <highgui.h>
 
 using namespace cv;
 using namespace std;

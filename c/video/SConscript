@@ -1,4 +1,4 @@
 Import("env")
 
-env.Program(target="video1", source="video1.c")
+env.Program(target="player", source="player.c")
 env.Program(target="camera", source="camera.c")
